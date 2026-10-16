@@ -1,0 +1,1260 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador de Ciencias para Secundaria</title>
+<style>
+:root {
+  --azul:#17365d;
+  --azul2:#2864a8;
+  --fondo:#f2f5fa;
+  --borde:#d8e0ec;
+  --verde:#198754;
+  --rojo:#c0392b;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--fondo);color:#182438;
+  font-family:Arial,Helvetica,sans-serif;line-height:1.6
+}
+header{
+  background:linear-gradient(120deg,#11243e,#2864a8);
+  color:white;padding:25px 5%
+}
+header h1{margin:0;font-size:clamp(1.5rem,3vw,2.3rem)}
+header p{margin:5px 0 0;color:#e1edff}
+main{
+  max-width:1250px;margin:22px auto;padding:0 16px;
+  display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px
+}
+.panel{
+  background:white;border:1px solid var(--borde);
+  border-radius:14px;padding:22px;box-shadow:0 4px 15px #10213b0a
+}
+aside{display:flex;flex-direction:column;gap:15px}
+aside .panel{padding:16px}
+h2{font-size:1.35rem;line-height:1.35}
+h3{margin-top:0}
+.small{font-size:.88rem;color:#637187}
+.pill{
+  display:inline-block;background:#e8f0ff;color:#214f91;
+  padding:5px 11px;border-radius:30px;font-size:.85rem;font-weight:bold
+}
+.timer{
+  background:#fff0cc;color:#704800;padding:8px 12px;
+  border-radius:8px;font-weight:bold;font-variant-numeric:tabular-nums
+}
+.topline{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.progress{height:8px;background:#e4eaf3;border-radius:9px;margin:12px 0 20px;overflow:hidden}
+.progress div{height:100%;background:var(--azul2);width:0}
+.context{
+  background:#f3f7fc;border-left:4px solid #4983cc;
+  padding:13px 16px;border-radius:7px;margin:15px 0
+}
+.options{display:grid;gap:10px;margin-top:18px}
+.option{
+  display:flex;gap:10px;align-items:flex-start;padding:12px;
+  border:1px solid var(--borde);border-radius:9px;cursor:pointer
+}
+.option:hover{background:#f6f9ff;border-color:#7c9ed0}
+.option.selected{background:#eaf2ff;border-color:var(--azul2)}
+.option input{margin-top:6px;accent-color:var(--azul2)}
+.letter{font-weight:bold;color:var(--azul2)}
+.controls{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;flex-wrap:wrap;margin-top:22px
+}
+button{
+  border:0;border-radius:8px;padding:10px 14px;
+  font-weight:bold;cursor:pointer;font-size:.93rem
+}
+button:disabled{opacity:.4;cursor:not-allowed}
+.primary{background:var(--azul2);color:white}
+.secondary{background:#e8edf5;color:#26364e}
+.danger{background:var(--rojo);color:white}
+.navgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.navgrid button{padding:7px 0;background:#edf1f7;color:#29384e}
+.navgrid button.done{background:#d9eee2;color:#12633c}
+.navgrid button.current{outline:2px solid var(--azul2)}
+.formula{
+  font-family:Consolas,monospace;background:#f3f6fa;
+  padding:7px;border-radius:6px;margin:6px 0;overflow-wrap:anywhere
+}
+svg{width:100%;height:auto;background:white;border-radius:8px}
+.results{display:none;grid-column:1/-1}
+.results.show{display:block}
+.score{font-size:2rem;font-weight:bold;color:var(--azul2)}
+.feedback{padding:13px;margin:12px 0;border:1px solid var(--borde);border-radius:9px}
+.feedback.correct{border-left:5px solid var(--verde)}
+.feedback.incorrect{border-left:5px solid var(--rojo)}
+footer{text-align:center;color:#6a7688;padding:25px}
+@media(max-width:850px){main{grid-template-columns:1fr}.navgrid{grid-template-columns:repeat(10,1fr)}}
+@media(max-width:480px){.panel{padding:15px}.navgrid{grid-template-columns:repeat(6,1fr)}}
+@media print{header,aside,.controls,footer{display:none!important}main{display:block}.panel{box-shadow:none;border:0}}
+
+.supportgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:8px 0 12px;align-items:start}
+.formula-panel,.visualbox{background:#fbfcff;border:1px solid var(--borde);border-radius:9px;padding:9px 11px;min-width:0}
+.formula-panel h3{font-size:1rem;margin:0 0 8px;color:#214f91}
+.visualbox>b{display:block;margin-bottom:8px;color:#214f91}
+.visualbox svg{display:block;width:100%;height:auto;max-height:245px}
+.visualcaption{font-size:.85rem;color:#52637c;margin:8px 0 0;line-height:1.45}
+.context2{display:none}
+@media(max-width:650px){.supportgrid{grid-template-columns:1fr}}
+
+
+.comparison-panel{margin:8px 0 12px;border:1px solid var(--borde);border-radius:10px;overflow:hidden;background:#fff}
+.comparison-panel h3{font-size:1rem;margin:0;padding:11px 13px;background:#edf4ff;color:#214f91}
+.comparison-panel .table-wrap{overflow-x:auto}
+.comparison-panel table{border-collapse:collapse;width:100%;font-size:.9rem;line-height:1.45}
+.comparison-panel th,.comparison-panel td{padding:9px 11px;border:1px solid #e0e7f0;text-align:left;vertical-align:top}
+.comparison-panel th{background:#f6f8fc;color:#26364e}
+.visualbox,.formula-panel,.comparison-panel{break-inside:avoid}
+@media(max-width:650px){.comparison-panel table{font-size:.82rem}.comparison-panel th,.comparison-panel td{padding:7px}}
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Simulador de Ciencias para Secundaria</h1>
+  <p>Física · Química · Biología | Contextos de Costa Rica · Física · Química · Biología · 60 preguntas</p>
+</header>
+
+<main>
+<section class="panel" id="exam">
+  <div class="topline">
+    <span class="pill" id="subject">Preparación</span>
+    <span class="timer" id="timer">04:00:00</span>
+  </div>
+
+  <p class="small" id="counter">Pregunta 1 de 60</p>
+  <div class="progress"><div id="progressbar"></div></div>
+  <div id="questionArea"></div>
+
+  <div class="controls">
+    <button class="secondary" id="prev">← Anterior</button>
+    <div>
+      <button class="secondary" id="flag">Marcar ☆</button>
+      <button class="primary" id="next">Siguiente →</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <span class="small" id="answered">Respondidas: 0 de 60</span>
+    <button class="danger" id="finish">Finalizar prueba</button>
+  </div>
+</section>
+
+<aside>
+  <section class="panel">
+    <h3>Fórmulas y constantes para estos ejercicios</h3>
+    <p class="small"><b>Física</b></p>
+    <div class="formula">Desplazamiento perpendicular: d = √(x² + y²)</div>
+    <div class="formula">Rapidez media: v = distancia / tiempo</div>
+    <div class="formula">Aceleración: a = (v_f − v_i) / Δt</div>
+    <div class="formula">Área bajo gráfica v–t = desplazamiento</div>
+    <div class="formula">Fuerza neta: ΣF = ma</div>
+    <div class="formula">Gravitación: F_g ∝ (m₁m₂) / r²</div>
+    <div class="formula">Peso: P = mg; energía potencial: E_p = mgh</div>
+    <div class="formula">Potencia media: P = W / t</div>
+    <div class="formula">Densidad: ρ = m / V</div>
+    <div class="formula">Ley de Ohm: I = V / R</div>
+    <div class="formula">Rapidez de onda: v = fλ</div>
+    <p class="small"><b>Química</b></p>
+    <div class="formula">Número de neutrones = A − Z</div>
+    <div class="formula">Átomo neutro: electrones = protones = Z</div>
+    <div class="formula">Ion positivo: electrones = Z − carga</div>
+    <div class="formula">Proporción molar: usar coeficientes de la ecuación balanceada</div>
+    <div class="formula">% m/m = (masa de soluto / masa de disolución) × 100</div>
+    <p class="small"><b>Constantes y datos</b></p>
+    <div class="formula">g = 10 m/s² (valor indicado en el ejercicio de la mochila)</div>
+    <div class="formula">1 N = 1 kg·m/s²; 1 J = 1 N·m; 1 W = 1 J/s</div>
+    <div class="formula">1 mol de H₂ produce 1 mol de H₂O según 2H₂ + O₂ → 2H₂O</div>
+    <p class="small">Use solo la fórmula pertinente en cada pregunta. Los ítems conceptuales de Biología, Ecología y Química se responden con los principios científicos descritos; no requieren una fórmula numérica.</p>
+  </section>
+
+  <section class="panel">
+    <h3>Navegación</h3>
+    <div class="navgrid" id="navgrid"></div>
+    <p class="small">Verde: respondida. ★: marcada para revisar.</p>
+  </section>
+
+  <section class="panel">
+    <h3>Instrucciones</h3>
+    <ul class="small">
+      <li>Seleccione una respuesta por pregunta.</li>
+      <li>Analice los datos antes de responder.</li>
+      <li>Puede cambiar sus respuestas.</li>
+      <li>Al finalizar recibirá su puntuación y retroalimentación.</li>
+    </ul>
+  </section>
+</aside>
+
+<section class="panel results" id="results">
+  <h2>Resultados de la prueba</h2>
+  <div class="score" id="score"></div>
+  <p id="summary"></p>
+  <div id="review"></div>
+  <div class="controls">
+    <button class="primary" onclick="location.reload()">Reiniciar</button>
+    <button class="secondary" onclick="window.print()">Imprimir resultados</button>
+  </div>
+</section>
+</main>
+
+<footer>Práctica educativa para secundaria con contextos de Costa Rica. Distribución de 60 ítems basada en las evidencias suministradas; no es una prueba oficial del MEP.</footer>
+
+<script>
+"use strict";
+
+/*
+  Banco de preguntas: 60 ítems distribuidos según la tabla de evidencias proporcionada.
+  Cada pregunta tiene cuatro opciones, una respuesta correcta y una explicación.
+*/
+const bank = [
+  {
+    "s": "Física",
+    "t": "Física teórica y experimental",
+    "q": "¿Cuál opción distingue mejor la física teórica de la experimental?",
+    "o": [
+      "La teórica propone y desarrolla modelos; la experimental obtiene y analiza datos mediante observaciones y mediciones.",
+      "La teórica solo estudia el pasado y la experimental solo el futuro.",
+      "La experimental no utiliza instrumentos ni mediciones.",
+      "Son actividades sin relación entre sí."
+    ],
+    "a": 0,
+    "e": "La física teórica construye modelos y predicciones; la experimental contrasta esas ideas con observaciones y mediciones.",
+    "c": "En un colegio de San José, un grupo de estudiantes prepara una feria científica sobre cómo se construye el conocimiento. Un equipo formula modelos para explicar lo que ocurre y otro diseña pruebas, mide variables y compara resultados. La situación permite distinguir dos formas complementarias de trabajar en ciencias."
+  },
+  {
+    "s": "Física",
+    "t": "Magnitudes escalares y vectoriales",
+    "q": "¿Cuál conjunto contiene únicamente magnitudes escalares?",
+    "o": [
+      "Desplazamiento, fuerza y velocidad.",
+      "Masa, tiempo y temperatura.",
+      "Aceleración, rapidez y peso.",
+      "Fuerza, energía y desplazamiento."
+    ],
+    "a": 1,
+    "e": "Las magnitudes escalares se describen con valor y unidad; masa, tiempo y temperatura no requieren dirección.",
+    "c": "Durante una práctica en el patio de un liceo de Alajuela, el grupo registra la masa de una muestra, el tiempo que tarda una pelota en rodar y la temperatura del agua. Para organizar los datos, deben distinguir las magnitudes que se describen solo con valor y unidad de aquellas que también requieren dirección."
+  },
+  {
+    "s": "Física",
+    "t": "Magnitudes escalares y vectoriales",
+    "q": "Una estudiante camina 3 m al norte y luego 4 m al este. ¿Cuál es el módulo de su desplazamiento?",
+    "o": [
+      "7 m",
+      "1 m",
+      "5 m",
+      "12 m"
+    ],
+    "a": 2,
+    "e": "Los desplazamientos son perpendiculares: el módulo es √(3²+4²)=5 m. La distancia recorrida, en cambio, es 7 m.",
+    "c": "En una actividad de orientación en el Parque Metropolitano La Sabana, una estudiante camina primero 3 m hacia el norte y luego 4 m hacia el este entre dos puntos de referencia. El profesor pide calcular el desplazamiento directo desde la salida hasta la llegada, no la longitud total del camino recorrido."
+  },
+  {
+    "s": "Física",
+    "t": "Conceptos del movimiento",
+    "q": "Un ciclista recorre una pista cerrada y termina en el mismo punto donde comenzó. ¿Cuál afirmación es correcta?",
+    "o": [
+      "Su desplazamiento es igual a la distancia.",
+      "Su desplazamiento total es cero, aunque recorrió una distancia.",
+      "Su distancia recorrida es cero.",
+      "Su rapidez media necesariamente es cero."
+    ],
+    "a": 1,
+    "e": "El desplazamiento depende de la posición inicial y final; si coinciden, es cero. La distancia suma todo el trayecto.",
+    "c": "En una ciclovía de Cartago, un ciclista da una vuelta completa a un circuito y regresa al punto de partida. Aunque durante el recorrido se movió una distancia considerable, el grupo debe describir su cambio neto de posición al terminar la vuelta."
+  },
+  {
+    "s": "Física",
+    "t": "Tipos de movimiento",
+    "q": "Un automóvil aumenta su velocidad de 5 m/s a 17 m/s en 4 s con aceleración constante. ¿Cuál es su aceleración?",
+    "o": [
+      "3 m/s²",
+      "4 m/s²",
+      "5,5 m/s²",
+      "12 m/s²"
+    ],
+    "a": 0,
+    "e": "a=(vf−vi)/t=(17−5)/4=3 m/s².",
+    "c": "Un vehículo de mantenimiento de caminos rurales en Guanacaste aumenta su rapidez de 5 m/s a 17 m/s durante 4 s. Suponga que la aceleración se mantiene constante y que las mediciones son correctas. Con esos datos, el estudiantado calcula cuánto cambia la velocidad por segundo."
+  },
+  {
+    "s": "Física",
+    "t": "Gráficas del movimiento",
+    "q": "En una gráfica velocidad-tiempo, un móvil mantiene 6 m/s durante 5 s. ¿Qué representa el área bajo la gráfica?",
+    "o": [
+      "La aceleración, 30 m/s².",
+      "La fuerza neta.",
+      "El desplazamiento, 30 m.",
+      "La rapidez, 1,2 m/s."
+    ],
+    "a": 2,
+    "e": "En una gráfica velocidad-tiempo, el área con signo bajo la curva representa el desplazamiento: 6×5=30 m.",
+    "c": "En un laboratorio escolar de Limón, el sensor de un carrito registra una velocidad constante de 6 m/s durante 5 s en un tramo recto. En una gráfica velocidad-tiempo, el grupo analiza el área encerrada entre la línea de la velocidad y el eje del tiempo para interpretar el movimiento."
+  },
+  {
+    "s": "Física",
+    "t": "Leyes de Newton",
+    "q": "Una caja permanece en reposo sobre una mesa. Si su peso es 40 N y no hay otras fuerzas verticales, ¿cuánto vale la fuerza normal?",
+    "o": [
+      "0 N",
+      "20 N",
+      "40 N hacia arriba",
+      "80 N hacia abajo"
+    ],
+    "a": 2,
+    "e": "En equilibrio vertical, la fuerza normal equilibra el peso y tiene igual magnitud: 40 N hacia arriba.",
+    "c": "En el taller de tecnología de un colegio de Heredia, una caja permanece quieta sobre una mesa horizontal. Su peso es de 40 N y no hay otras fuerzas verticales actuando sobre ella. El estudiantado aplica la primera ley de Newton para relacionar las fuerzas que actúan hacia arriba y hacia abajo."
+  },
+  {
+    "s": "Física",
+    "t": "Leyes de Newton",
+    "q": "Se empuja una caja de 10 kg con una fuerza horizontal de 35 N; el rozamiento se opone con 5 N. ¿Cuál es la aceleración?",
+    "o": [
+      "3 m/s²",
+      "4 m/s²",
+      "5 m/s²",
+      "30 m/s²"
+    ],
+    "a": 0,
+    "e": "La fuerza neta es 35−5=30 N. Por la segunda ley, a=Fnet/m=30/10=3 m/s².",
+    "c": "Durante una demostración en un colegio de Puntarenas, una caja de equipo con masa de 10 kg es empujada horizontalmente con 35 N. El rozamiento ejerce una fuerza de 5 N en sentido contrario. Considere que la fuerza neta es horizontal y que la masa no cambia."
+  },
+  {
+    "s": "Física",
+    "t": "Gravitación universal",
+    "q": "Si la distancia entre dos cuerpos se duplica y sus masas no cambian, ¿cómo cambia la fuerza gravitatoria?",
+    "o": [
+      "Se duplica.",
+      "Se reduce a la mitad.",
+      "Se reduce a la cuarta parte.",
+      "Se cuadruplica."
+    ],
+    "a": 2,
+    "e": "La fuerza gravitatoria es inversamente proporcional al cuadrado de la distancia: F∝1/r².",
+    "c": "En una clase de ciencias en San Carlos, se estudia cómo cambia la atracción gravitatoria entre dos cuerpos cuando varía la separación entre ellos. Para aislar el efecto de la distancia, las masas se mantienen constantes y se compara una separación con otra que es el doble."
+  },
+  {
+    "s": "Física",
+    "t": "Trabajo, energía y potencia",
+    "q": "Una persona levanta una mochila de 5 kg hasta 2 m de altura. Use g=10 m/s². ¿Cuánta energía potencial gravitatoria gana?",
+    "o": [
+      "10 J",
+      "25 J",
+      "50 J",
+      "100 J"
+    ],
+    "a": 3,
+    "e": "ΔEp=mgh=5×10×2=100 J.",
+    "c": "En una actividad de energía en una escuela de Pérez Zeledón, una estudiante levanta una mochila de 5 kg desde el suelo hasta una repisa situada 2 m más arriba. Para este ejercicio, use g = 10 m/s² y desprecie los cambios de energía cinética; se busca la energía potencial gravitatoria ganada."
+  },
+  {
+    "s": "Física",
+    "t": "Trabajo, energía y potencia",
+    "q": "Una máquina realiza 600 J de trabajo en 20 s. ¿Cuál es su potencia media?",
+    "o": [
+      "30 W",
+      "120 W",
+      "580 W",
+      "12 000 W"
+    ],
+    "a": 0,
+    "e": "La potencia media es P=W/t=600/20=30 W.",
+    "c": "Una bomba de agua de una finca cafetalera en el Valle Central realiza 600 J de trabajo en 20 s. El equipo técnico escolar compara máquinas que realizan distinto trabajo en diferentes tiempos y necesita expresar la rapidez con que se transfiere energía."
+  },
+  {
+    "s": "Física",
+    "t": "Hidrostática",
+    "q": "Un objeto tiene masa de 200 g y volumen de 50 cm³. ¿Cuál es su densidad?",
+    "o": [
+      "0,25 g/cm³",
+      "4 g/cm³",
+      "10 000 g/cm³",
+      "250 g/cm³"
+    ],
+    "a": 1,
+    "e": "ρ=m/V=200/50=4 g/cm³.",
+    "c": "En una práctica con materiales de laboratorio, estudiantes de un colegio de Turrialba miden una muestra sólida de 200 g cuyo volumen es 50 cm³. Para identificar el material, calculan la masa contenida por unidad de volumen y expresan el resultado con unidades coherentes."
+  },
+  {
+    "s": "Física",
+    "t": "Hidrostática",
+    "q": "¿Por qué un bloque de madera flota parcialmente en agua?",
+    "o": [
+      "Porque no actúa la gravedad.",
+      "Porque el agua no ejerce presión.",
+      "Porque el empuje equilibra el peso y su densidad media es menor que la del agua.",
+      "Porque su masa cambia al entrar al agua."
+    ],
+    "a": 2,
+    "e": "Un cuerpo flota cuando el empuje puede equilibrar su peso; la madera suele tener densidad media menor que el agua.",
+    "c": "En una zona rural de Sarapiquí, estudiantes observan que trozos de madera colocados en una cubeta con agua quedan parcialmente sumergidos. Comparan el peso del objeto con la fuerza hacia arriba ejercida por el líquido y relacionan el fenómeno con la densidad del material."
+  },
+  {
+    "s": "Física",
+    "t": "Electrostática",
+    "q": "Dos cargas eléctricas del mismo signo se colocan cerca una de otra. ¿Qué ocurre?",
+    "o": [
+      "Se atraen siempre.",
+      "Se repelen.",
+      "No ejercen fuerza.",
+      "Se convierten en cargas neutras automáticamente."
+    ],
+    "a": 1,
+    "e": "Según la interacción eléctrica, cargas del mismo signo se repelen y cargas de signos opuestos se atraen.",
+    "c": "Durante una feria científica en San José, el estudiantado frota globos y los acerca sin tocarlos a otros objetos cargados. Se observa que el resultado depende del signo de las cargas eléctricas y se repasa cómo interactúan dos cargas del mismo signo."
+  },
+  {
+    "s": "Física",
+    "t": "Circuitos eléctricos",
+    "q": "Una resistencia de 6 Ω se conecta a una batería de 12 V. ¿Qué corriente circula?",
+    "o": [
+      "0,5 A",
+      "2 A",
+      "6 A",
+      "72 A"
+    ],
+    "a": 1,
+    "e": "Por la ley de Ohm, I=V/R=12/6=2 A.",
+    "c": "En el laboratorio de un colegio de Alajuela, se conecta una resistencia de 6 Ω a una fuente de 12 V. Si se supone que la resistencia es óhmica y que la fuente mantiene su voltaje, el grupo debe determinar la corriente que circula por el circuito."
+  },
+  {
+    "s": "Física",
+    "t": "Electromagnetismo",
+    "q": "¿Qué mostró el experimento de Oersted?",
+    "o": [
+      "Que una corriente eléctrica puede desviar una brújula y produce un campo magnético.",
+      "Que los imanes no interactúan con cargas.",
+      "Que la luz necesita un medio material.",
+      "Que la resistencia es siempre cero."
+    ],
+    "a": 0,
+    "e": "Oersted observó que la corriente eléctrica desvía una brújula, evidenciando la relación entre electricidad y magnetismo.",
+    "c": "En una demostración histórica de electromagnetismo, estudiantes de un colegio de Limón colocan una brújula cerca de un cable por el que circula corriente. La aguja se desvía cuando el circuito se cierra, lo que permite analizar la relación entre corriente eléctrica y campo magnético."
+  },
+  {
+    "s": "Física",
+    "t": "Electromagnetismo",
+    "q": "Una bobina genera corriente cuando cambia el flujo magnético que la atraviesa. ¿Qué fenómeno describe?",
+    "o": [
+      "Convección.",
+      "Electrólisis.",
+      "Inducción electromagnética.",
+      "Reflexión."
+    ],
+    "a": 2,
+    "e": "La ley de Faraday describe la inducción electromagnética: un cambio en el flujo magnético puede inducir una fuerza electromotriz.",
+    "c": "En un taller de robótica en Cartago, una bobina se conecta a un medidor y se acerca un imán. El medidor registra corriente solo mientras cambia el flujo magnético a través de la bobina; al detener el movimiento, la señal disminuye o desaparece."
+  },
+  {
+    "s": "Física",
+    "t": "Ondas",
+    "q": "Una onda tiene frecuencia de 5 Hz y longitud de onda de 2 m. ¿Cuál es su rapidez?",
+    "o": [
+      "2,5 m/s",
+      "7 m/s",
+      "10 m/s",
+      "20 m/s"
+    ],
+    "a": 2,
+    "e": "La rapidez de onda es v=fλ=5×2=10 m/s.",
+    "c": "Un equipo escolar de Guanacaste analiza una onda que se propaga por una cuerda durante una demostración: su frecuencia es 5 Hz y su longitud de onda es 2 m. Considerando que el medio se mantiene igual, calculan la rapidez de propagación de la onda."
+  },
+  {
+    "s": "Física",
+    "t": "Efecto invernadero",
+    "q": "¿Cuál afirmación describe correctamente el efecto invernadero?",
+    "o": [
+      "Es siempre perjudicial y debe eliminarse por completo.",
+      "El efecto natural mantiene la Tierra habitable, pero su intensificación por emisiones humanas favorece el calentamiento global.",
+      "Es causado únicamente por los agujeros de la capa de ozono.",
+      "No tiene relación con la radiación infrarroja."
+    ],
+    "a": 1,
+    "e": "El efecto invernadero natural retiene parte del calor; el aumento de gases de efecto invernadero intensifica el calentamiento.",
+    "c": "En una investigación sobre el clima de Costa Rica, estudiantes comparan la radiación solar que llega a la superficie con la energía infrarroja que emite la Tierra. También estudian gases atmosféricos como el dióxido de carbono y el vapor de agua, sin confundir el efecto invernadero natural con la contaminación local."
+  },
+  {
+    "s": "Física",
+    "t": "Relatividad especial",
+    "q": "Según la relatividad especial, ¿qué ocurre con el tiempo medido para un reloj que se mueve a velocidad cercana a la de la luz respecto de un observador?",
+    "o": [
+      "Para ese observador, el reloj en movimiento puede medir menos tiempo entre eventos comparables.",
+      "El tiempo deja de existir para todos.",
+      "La masa y la energía no guardan relación.",
+      "La velocidad de la luz depende siempre de la velocidad de la fuente."
+    ],
+    "a": 0,
+    "e": "La dilatación temporal es una consecuencia de la relatividad especial; los efectos son apreciables a velocidades cercanas a la luz.",
+    "c": "En una actividad de astronomía de un colegio de Heredia, se comenta qué observaría una persona si comparara un reloj en reposo con otro que viaja a una velocidad cercana a la de la luz. El problema se interpreta dentro de la relatividad especial y no en situaciones cotidianas de tránsito."
+  },
+  {
+    "s": "Química",
+    "t": "Elementos, compuestos y mezclas",
+    "q": "¿Cuál ejemplo corresponde a una mezcla homogénea?",
+    "o": [
+      "Agua con arena visible.",
+      "Ensalada de frutas.",
+      "Aire limpio, considerado mezcla uniforme de gases.",
+      "Granito con minerales distinguibles."
+    ],
+    "a": 2,
+    "e": "En una mezcla homogénea los componentes están distribuidos uniformemente y no se distinguen a simple vista.",
+    "c": "En una feria ambiental en el Caribe costarricense, el estudiantado compara agua de mar filtrada, una bebida preparada con agua y azúcar y una muestra de suelo. Debe reconocer qué sistema tiene composición uniforme a simple vista y en toda la muestra."
+  },
+  {
+    "s": "Química",
+    "t": "Elementos, compuestos y mezclas",
+    "q": "¿Qué método separa mejor arena mezclada con agua?",
+    "o": [
+      "Destilación fraccionada.",
+      "Filtración.",
+      "Imantación necesariamente.",
+      "Cromatografía de gases."
+    ],
+    "a": 1,
+    "e": "La arena es insoluble y sus partículas quedan retenidas en el filtro mientras el agua pasa.",
+    "c": "Después de una jornada de limpieza de una playa de Puntarenas, estudiantes separan arena mezclada con agua. Buscan recuperar la fase sólida usando una técnica física basada en el tamaño de las partículas y el paso del líquido a través de un material poroso."
+  },
+  {
+    "s": "Química",
+    "t": "Tabla periódica",
+    "q": "¿Cuál propiedad es característica de la mayoría de los metales?",
+    "o": [
+      "Son malos conductores y quebradizos en todos los casos.",
+      "Tienden a ser buenos conductores de calor y electricidad.",
+      "Se ubican únicamente en el extremo superior derecho de la tabla.",
+      "Todos son gases a temperatura ambiente."
+    ],
+    "a": 1,
+    "e": "La conductividad térmica y eléctrica y el brillo son propiedades frecuentes de los metales, aunque existen excepciones.",
+    "c": "En una clase sobre materiales usados en puentes y techos en Costa Rica, el grupo compara hierro, cobre, azufre y oxígeno. Se revisan propiedades comunes de los metales que explican por qué algunos se emplean para conducir electricidad o fabricar estructuras."
+  },
+  {
+    "s": "Química",
+    "t": "Estructura atómica",
+    "q": "Un átomo neutro tiene número atómico 11 y número másico 23. ¿Cuántos protones, neutrones y electrones posee?",
+    "o": [
+      "11, 12 y 11.",
+      "12, 11 y 12.",
+      "23, 11 y 11.",
+      "11, 23 y 12."
+    ],
+    "a": 0,
+    "e": "Protones=Z=11; neutrones=A−Z=23−11=12; en un átomo neutro, electrones=protones=11.",
+    "c": "Un laboratorio escolar de San José analiza un átomo neutro de sodio con número atómico 11 y número másico 23. El grupo usa el número atómico para conocer los protones y, al tratarse de un átomo neutro, relaciona esa cantidad con los electrones; los neutrones se obtienen por diferencia."
+  },
+  {
+    "s": "Química",
+    "t": "Estructura atómica",
+    "q": "Un ion Ca²⁺ tiene número atómico 20 y número másico 40. ¿Cuántos electrones tiene?",
+    "o": [
+      "18",
+      "20",
+      "22",
+      "40"
+    ],
+    "a": 0,
+    "e": "El calcio neutro tiene 20 electrones; al formar Ca²⁺ pierde 2, por lo que queda con 18.",
+    "c": "En una práctica de química, se estudia el ion calcio Ca²⁺, presente en minerales y en estructuras biológicas. El calcio tiene número atómico 20 y el ion posee carga +2 porque perdió dos electrones respecto del átomo neutro. El grupo calcula cuántos electrones conserva."
+  },
+  {
+    "s": "Química",
+    "t": "Configuración electrónica",
+    "q": "¿Cuántos electrones de valencia tiene el oxígeno, cuya configuración termina en 2s² 2p⁴?",
+    "o": [
+      "2",
+      "4",
+      "6",
+      "8"
+    ],
+    "a": 2,
+    "e": "Los electrones del nivel externo n=2 son 2+4=6; esos son sus electrones de valencia.",
+    "c": "En una actividad de nutrición y química en un colegio de Alajuela, se analiza el oxígeno, elemento presente en el aire que respiramos. Su configuración electrónica termina en 2s² 2p⁴; a partir de esa información, se identifica cuántos electrones hay en la capa de valencia."
+  },
+  {
+    "s": "Química",
+    "t": "Configuración electrónica",
+    "q": "¿Qué información representa la estructura de Lewis de un elemento representativo?",
+    "o": [
+      "Todos los neutrones del núcleo.",
+      "Los electrones de valencia mediante puntos alrededor del símbolo químico.",
+      "La masa exacta de cada electrón.",
+      "La trayectoria fija de cada electrón alrededor del núcleo."
+    ],
+    "a": 1,
+    "e": "Las estructuras de Lewis representan los electrones de valencia, útiles para anticipar enlaces químicos.",
+    "c": "En una feria de ciencias de Cartago, el estudiantado utiliza diagramas de puntos para representar los electrones externos de elementos representativos. La docente explica que estos diagramas ayudan a anticipar cómo se forman enlaces, pero no muestran trayectorias exactas de electrones alrededor del núcleo."
+  },
+  {
+    "s": "Química",
+    "t": "Enlaces químicos",
+    "q": "¿Cuál sustancia presenta principalmente enlace iónico?",
+    "o": [
+      "Cloruro de sodio (NaCl).",
+      "Oxígeno molecular (O₂).",
+      "Metano (CH₄).",
+      "Cobre metálico (Cu)."
+    ],
+    "a": 0,
+    "e": "El NaCl forma una red de iones Na⁺ y Cl⁻ por transferencia de electrones; O₂ y CH₄ son covalentes y Cu es metálico.",
+    "c": "En una lección sobre fertilizantes y sales minerales utilizadas en agricultura costarricense, se comparan distintas sustancias según la forma en que se enlazan sus átomos. El grupo debe reconocer el enlace que suele formarse por transferencia de electrones entre un metal y un no metal."
+  },
+  {
+    "s": "Química",
+    "t": "Nomenclatura química",
+    "q": "Según el sistema Stock, ¿cómo se nombra FeCl₃?",
+    "o": [
+      "Cloruro de hierro (II).",
+      "Cloruro de hierro (III).",
+      "Tricloruro de hierro (I).",
+      "Clorato de hierro."
+    ],
+    "a": 1,
+    "e": "Cada cloruro tiene carga −1; tres aportan −3, así que el hierro está en +3: cloruro de hierro (III).",
+    "c": "En un laboratorio escolar se etiqueta un compuesto de hierro y cloro, FeCl₃. Para escribir el nombre con el sistema Stock, el estudiantado determina el estado de oxidación del hierro considerando que cada cloro tiene número de oxidación −1 y que el compuesto es eléctricamente neutro."
+  },
+  {
+    "s": "Química",
+    "t": "Nomenclatura química",
+    "q": "En nomenclatura estequiométrica, ¿cómo se nombra CO₂?",
+    "o": [
+      "Monóxido de carbono.",
+      "Dióxido de carbono.",
+      "Óxido de carbono (I).",
+      "Carbonato de oxígeno."
+    ],
+    "a": 1,
+    "e": "El prefijo di- indica dos átomos de oxígeno: dióxido de carbono.",
+    "c": "En una práctica de nomenclatura, estudiantes estudian el dióxido de carbono, gas que se mide en investigaciones sobre respiración y cambio climático. El nombre estequiométrico debe indicar cuántos átomos de oxígeno acompañan a cada átomo de carbono en la fórmula CO₂."
+  },
+  {
+    "s": "Química",
+    "t": "Estequiometría",
+    "q": "En 2H₂ + O₂ → 2H₂O, si reaccionan 4 mol de H₂ con suficiente oxígeno, ¿cuántos moles de agua se forman?",
+    "o": [
+      "1 mol",
+      "2 mol",
+      "4 mol",
+      "8 mol"
+    ],
+    "a": 2,
+    "e": "La proporción molar H₂:H₂O es 2:2, es decir, 1:1; 4 mol de H₂ producen 4 mol de H₂O si hay oxígeno suficiente.",
+    "c": "En una experiencia de química escolar, se modela la formación de agua mediante la ecuación balanceada 2H₂ + O₂ → 2H₂O. Si se dispone de 4 mol de hidrógeno y hay oxígeno suficiente, el grupo utiliza la proporción molar de la ecuación para estimar los moles de agua producidos."
+  },
+  {
+    "s": "Química",
+    "t": "Solubilidad y disolución",
+    "q": "¿Qué acción suele aumentar la rapidez con que se disuelve azúcar en agua?",
+    "o": [
+      "Usar un terrón entero y agua fría sin mover.",
+      "Agitar y aumentar moderadamente la temperatura.",
+      "Reducir la superficie de contacto y dejar reposar.",
+      "Añadir arena para que el azúcar desaparezca químicamente."
+    ],
+    "a": 1,
+    "e": "La agitación, la mayor superficie de contacto y generalmente una temperatura mayor aceleran la disolución de sólidos.",
+    "c": "En una cocina escolar de Guanacaste, estudiantes comparan cuánto tarda en disolverse azúcar en agua fría al dejarla quieta o al agitarla. Manteniendo iguales las cantidades y la temperatura, investigan qué acción aumenta la frecuencia de contacto entre el soluto y el disolvente."
+  },
+  {
+    "s": "Química",
+    "t": "Solubilidad y disolución",
+    "q": "¿Por qué el agua disuelve muchas sustancias iónicas y polares?",
+    "o": [
+      "Porque es apolar.",
+      "Porque sus moléculas son polares y pueden interactuar con iones y moléculas polares.",
+      "Porque siempre reacciona químicamente con todo soluto.",
+      "Porque no forma enlaces intermoleculares."
+    ],
+    "a": 1,
+    "e": "La polaridad del agua favorece la interacción y estabilización de muchos iones y moléculas polares.",
+    "c": "En una práctica sobre calidad del agua en Costa Rica, el grupo compara cómo se disuelve la sal común y cómo se dispersan sustancias no polares en agua. Se analiza la polaridad de las moléculas de agua y su capacidad de interactuar con iones y moléculas polares."
+  },
+  {
+    "s": "Química",
+    "t": "Propiedades coligativas",
+    "q": "¿Qué sucede normalmente con el punto de congelación del agua cuando se disuelve sal en ella?",
+    "o": [
+      "Aumenta.",
+      "Disminuye.",
+      "Permanece siempre exactamente igual.",
+      "El agua se convierte en elemento."
+    ],
+    "a": 1,
+    "e": "La presencia de partículas de soluto reduce el punto de congelación; es una propiedad coligativa.",
+    "c": "En una investigación sobre el hielo en bebidas, estudiantes disuelven sal en agua y comparan el punto de congelación con el del agua pura bajo condiciones similares. Se enfocan en el efecto que produce la presencia de partículas de soluto, sin cambiar la identidad del disolvente."
+  },
+  {
+    "s": "Química",
+    "t": "Propiedades coligativas",
+    "q": "Dos disoluciones diluidas contienen igual cantidad de partículas de soluto por kilogramo de disolvente. En condiciones comparables, ¿qué determina principalmente la magnitud de sus propiedades coligativas?",
+    "o": [
+      "El color del soluto.",
+      "La concentración de partículas disueltas.",
+      "La marca del recipiente.",
+      "La forma del vaso."
+    ],
+    "a": 1,
+    "e": "Las propiedades coligativas dependen principalmente del número de partículas de soluto en relación con la cantidad de disolvente.",
+    "c": "Un laboratorio de secundaria compara dos disoluciones diluidas preparadas con distintas sustancias, pero con igual cantidad de partículas de soluto por kilogramo de disolvente. El docente pregunta qué condición explica principalmente que sus propiedades coligativas tengan magnitudes comparables."
+  },
+  {
+    "s": "Química",
+    "t": "Concentración",
+    "q": "Se disuelven 10 g de sal hasta obtener 200 g de disolución. ¿Cuál es el porcentaje masa en masa?",
+    "o": [
+      "2 %",
+      "5 %",
+      "10 %",
+      "20 %"
+    ],
+    "a": 1,
+    "e": "% m/m=(masa soluto/masa disolución)×100=(10/200)×100=5 %.",
+    "c": "En una práctica de preparación de disoluciones, se mezclan 10 g de sal con agua hasta obtener 200 g de disolución total. El estudiantado debe calcular qué porcentaje de la masa final corresponde al soluto, recordando que se utiliza la masa de la disolución completa en el denominador."
+  },
+  {
+    "s": "Química",
+    "t": "Química orgánica",
+    "q": "¿Qué característica distingue a la química orgánica en el nivel introductorio?",
+    "o": [
+      "Estudia principalmente compuestos del carbono y sus transformaciones.",
+      "Estudia exclusivamente metales puros.",
+      "No tiene aplicaciones en medicina ni agricultura.",
+      "Solo estudia sustancias sin enlaces covalentes."
+    ],
+    "a": 0,
+    "e": "La química orgánica estudia la estructura, propiedades y reacciones de muchos compuestos del carbono.",
+    "c": "En una lección vinculada con combustibles, plásticos y materiales de uso cotidiano en Costa Rica, el grupo estudia el campo de la química orgánica. Se busca identificar la característica general que suele utilizarse para delimitar este campo en un curso introductorio."
+  },
+  {
+    "s": "Química",
+    "t": "Química orgánica",
+    "q": "¿Cuál es el nombre del hidrocarburo de tres carbonos con únicamente enlaces simples?",
+    "o": [
+      "Propano.",
+      "Propeno.",
+      "Propino.",
+      "Propinoato."
+    ],
+    "a": 0,
+    "e": "El prefijo prop- indica tres carbonos y el sufijo -ano identifica un alcano con enlaces simples.",
+    "c": "En una actividad sobre gases y combustibles, se presenta un hidrocarburo formado por tres átomos de carbono y únicamente enlaces simples entre carbonos. Para nombrarlo, el grupo combina la raíz que indica tres carbonos con la terminación propia de los alcanos."
+  },
+  {
+    "s": "Química",
+    "t": "Grupos funcionales",
+    "q": "¿Qué grupo funcional caracteriza a los alcoholes?",
+    "o": [
+      "Carbonilo terminal −CHO.",
+      "Hidroxilo −OH unido a un carbono.",
+      "Carboxilo −COOH exclusivamente.",
+      "Grupo amino −NH₂ exclusivamente."
+    ],
+    "a": 1,
+    "e": "Los alcoholes se caracterizan por un grupo hidroxilo (−OH) unido a un carbono saturado.",
+    "c": "En una práctica de química relacionada con productos de limpieza y cuidado personal, se revisan los grupos funcionales presentes en distintas moléculas orgánicas. El estudiantado debe reconocer el grupo característico de los alcoholes, que incluye un átomo de oxígeno unido a hidrógeno."
+  },
+  {
+    "s": "Biología",
+    "t": "Biomoléculas",
+    "q": "¿Cuál biomolécula almacena y transmite la información hereditaria?",
+    "o": [
+      "Triglicéridos.",
+      "Almidón.",
+      "Ácidos nucleicos como ADN y ARN.",
+      "Sales minerales únicamente."
+    ],
+    "a": 2,
+    "e": "El ADN almacena la información genética y el ARN participa, entre otras funciones, en su expresión.",
+    "c": "En un proyecto sobre biodiversidad de Costa Rica, estudiantes investigan cómo se almacena la información hereditaria en los seres vivos, desde los microorganismos hasta los árboles del bosque tropical. Comparan las principales biomoléculas y buscan la que contiene instrucciones genéticas."
+  },
+  {
+    "s": "Biología",
+    "t": "Adaptaciones",
+    "q": "Las patas palmeadas de un pato facilitan el desplazamiento en el agua. ¿Qué tipo de adaptación es?",
+    "o": [
+      "Morfológica o anatómica.",
+      "Etológica.",
+      "Fisiológica exclusivamente.",
+      "Una relación interespecífica."
+    ],
+    "a": 0,
+    "e": "La forma de las patas es una característica estructural del cuerpo: una adaptación morfológica.",
+    "c": "Durante una visita educativa a un humedal de Guanacaste, el grupo observa patos que se desplazan con facilidad por el agua. Sus patas tienen membranas entre los dedos; se analiza cómo una característica de la estructura corporal favorece la función y el modo de vida del organismo."
+  },
+  {
+    "s": "Biología",
+    "t": "Organización ecológica",
+    "q": "En un bosque se estudian todos los individuos de venado de cola blanca que viven allí. ¿Qué nivel se está analizando?",
+    "o": [
+      "Especie en todo el planeta.",
+      "Población.",
+      "Comunidad completa.",
+      "Ecosistema abiótico solamente."
+    ],
+    "a": 1,
+    "e": "Una población reúne individuos de la misma especie que habitan una zona y periodo determinados.",
+    "c": "En un monitoreo de fauna en un bosque de la Zona Norte, estudiantes registran todos los venados de cola blanca presentes en el área de estudio durante un periodo definido. No incluyen otras especies ni todos los organismos del ecosistema: se concentran en los individuos de una misma especie."
+  },
+  {
+    "s": "Biología",
+    "t": "Biodiversidad",
+    "q": "Un sitio tiene 12 especies de aves y otro tiene 5. Si el esfuerzo de muestreo fue comparable, ¿qué puede concluirse con seguridad?",
+    "o": [
+      "El primero tiene mayor riqueza de especies de aves registradas.",
+      "El primero tiene necesariamente más individuos totales.",
+      "El segundo no tiene biodiversidad.",
+      "El primero siempre posee mayor diversidad genética."
+    ],
+    "a": 0,
+    "e": "La riqueza de especies es el número de especies registradas; no determina por sí sola la abundancia ni la diversidad genética.",
+    "c": "Dos grupos escolares realizan censos de aves en sitios de Costa Rica usando el mismo tiempo, área y método de muestreo. En uno registran 12 especies y en el otro 5. El estudiantado debe interpretar qué conclusión está respaldada por los datos, sin afirmar causas que no se midieron."
+  },
+  {
+    "s": "Biología",
+    "t": "Conservación de la biodiversidad",
+    "q": "¿Cuál acción ayuda directamente a reducir la fragmentación del hábitat?",
+    "o": [
+      "Construir carreteras sin pasos de fauna.",
+      "Conectar parches de bosque mediante corredores biológicos.",
+      "Eliminar la vegetación ribereña.",
+      "Introducir especies invasoras."
+    ],
+    "a": 1,
+    "e": "Los corredores biológicos conectan hábitats y facilitan el desplazamiento y flujo genético de organismos.",
+    "c": "En un cantón costarricense se propone una carretera que podría dividir un bosque en fragmentos aislados. La comunidad analiza alternativas para permitir el movimiento de animales y la continuidad de la vegetación entre parches de hábitat."
+  },
+  {
+    "s": "Biología",
+    "t": "Hábitat y nicho ecológico",
+    "q": "¿Cuál opción diferencia correctamente hábitat y nicho ecológico?",
+    "o": [
+      "El hábitat es el lugar donde vive un organismo; el nicho describe su papel, recursos y condiciones de vida.",
+      "Hábitat y nicho significan exactamente lo mismo.",
+      "El nicho es solo el tamaño del organismo.",
+      "El hábitat describe únicamente su dieta."
+    ],
+    "a": 0,
+    "e": "El hábitat es el espacio donde vive una especie; el nicho incluye cómo utiliza recursos e interactúa con el ambiente.",
+    "c": "En un proyecto de observación de yigüirros en un jardín escolar, el grupo distingue el lugar donde vive una especie de las funciones que cumple, los recursos que utiliza y sus interacciones con otros organismos. Ambos conceptos ecológicos se relacionan, pero no significan lo mismo."
+  },
+  {
+    "s": "Biología",
+    "t": "Dinámica poblacional",
+    "q": "Una población aumenta cuando nacen más individuos de los que mueren y la inmigración supera la emigración. ¿Qué ocurre?",
+    "o": [
+      "Su tamaño tiende a crecer.",
+      "Su tamaño necesariamente disminuye.",
+      "La capacidad de carga desaparece.",
+      "La población deja de necesitar recursos."
+    ],
+    "a": 0,
+    "e": "Natalidad e inmigración añaden individuos; mortalidad y emigración los reducen.",
+    "c": "En un estudio de tortugas marinas en la costa del Pacífico, el equipo registra nacimientos, muertes, individuos que llegan y otros que se van de una población durante una temporada. Si nacen más individuos de los que mueren y la inmigración supera la emigración, analizan cómo cambia el tamaño poblacional."
+  },
+  {
+    "s": "Biología",
+    "t": "Crecimiento poblacional",
+    "q": "Una población crece rápido al principio y luego se estabiliza cerca del límite de recursos. ¿Qué patrón muestra?",
+    "o": [
+      "Exponencial indefinido.",
+      "Logístico.",
+      "Decreciente desde el inicio.",
+      "Aleatorio sin relación con recursos."
+    ],
+    "a": 1,
+    "e": "El crecimiento logístico se desacelera al acercarse a la capacidad de carga del ambiente.",
+    "c": "En un bosque secundario cerca de Sarapiquí, estudiantes siguen el tamaño de una población durante varios años. Al inicio aumenta rápidamente, pero más adelante el alimento, el espacio y otros recursos limitan el crecimiento y la población se estabiliza alrededor de un límite ambiental."
+  },
+  {
+    "s": "Biología",
+    "t": "Interacciones poblacionales",
+    "q": "Una garrapata se alimenta de la sangre de un perro y lo perjudica. ¿Qué interacción ocurre?",
+    "o": [
+      "Mutualismo (+/+).",
+      "Comensalismo (+/0).",
+      "Parasitismo (+/−).",
+      "Competencia neutral (0/0)."
+    ],
+    "a": 2,
+    "e": "El parásito obtiene beneficio y el huésped resulta perjudicado: (+/−).",
+    "c": "En una campaña veterinaria comunitaria, se explica que las garrapatas pueden alimentarse de la sangre de los perros y causarles perjuicio. El grupo clasifica la interacción biológica según el beneficio que obtiene un organismo y el efecto negativo sobre el otro."
+  },
+  {
+    "s": "Biología",
+    "t": "Flujo de energía",
+    "q": "En una cadena pasto → saltamontes → rana → serpiente, ¿qué organismo es consumidor primario?",
+    "o": [
+      "Pasto.",
+      "Saltamontes.",
+      "Rana.",
+      "Serpiente."
+    ],
+    "a": 1,
+    "e": "El saltamontes se alimenta directamente del productor, por lo que es consumidor primario.",
+    "c": "En un jardín de polinizadores de un colegio costarricense, se representa una cadena alimentaria: pasto → saltamontes → rana → serpiente. El estudiantado identifica el organismo que obtiene energía directamente de los productores, es decir, el que se alimenta del pasto."
+  },
+  {
+    "s": "Biología",
+    "t": "Ciclos biogeoquímicos",
+    "q": "¿Qué proceso retira dióxido de carbono del aire y lo incorpora a moléculas orgánicas?",
+    "o": [
+      "Fotosíntesis.",
+      "Combustión.",
+      "Respiración celular únicamente.",
+      "Descomposición de combustibles."
+    ],
+    "a": 0,
+    "e": "Durante la fotosíntesis, los organismos fotosintéticos incorporan carbono del CO₂ para formar compuestos orgánicos.",
+    "c": "En una investigación sobre bosques tropicales de Costa Rica, el grupo estudia cómo el carbono del dióxido de carbono atmosférico puede incorporarse a moléculas orgánicas de las plantas. Se compara la función de la fotosíntesis con procesos que liberan dióxido de carbono."
+  },
+  {
+    "s": "Biología",
+    "t": "Fotosíntesis y respiración",
+    "q": "¿Cuál afirmación compara correctamente fotosíntesis y respiración celular aerobia?",
+    "o": [
+      "Ambas consumen siempre los mismos reactivos y producen lo mismo.",
+      "La fotosíntesis almacena energía en compuestos orgánicos; la respiración libera energía utilizable a partir de ellos.",
+      "La respiración solo ocurre en plantas y la fotosíntesis en animales.",
+      "Ninguno de los procesos involucra transformaciones de materia."
+    ],
+    "a": 1,
+    "e": "La fotosíntesis usa energía luminosa para formar materia orgánica; la respiración aerobia libera energía química utilizable.",
+    "c": "En una investigación sobre bosques tropicales de Costa Rica, el grupo estudia cómo el carbono del dióxido de carbono atmosférico puede incorporarse a moléculas orgánicas de las plantas. También compara la fotosíntesis, que almacena energía química, con la respiración celular aerobia, que libera energía utilizable por las células."
+  },
+  {
+    "s": "Biología",
+    "t": "ADN y ARN",
+    "q": "¿Qué base nitrogenada está presente en el ARN en lugar de la timina del ADN?",
+    "o": [
+      "Uracilo.",
+      "Guanina.",
+      "Citosina.",
+      "Adenina."
+    ],
+    "a": 0,
+    "e": "En el ARN, el uracilo ocupa el lugar que corresponde a la timina en el ADN.",
+    "c": "En una práctica de biología molecular, estudiantes comparan ADN y ARN al estudiar cómo las células usan información genética. Analizan las bases nitrogenadas de cada ácido nucleico y deben identificar cuál aparece en el ARN en lugar de la timina."
+  },
+  {
+    "s": "Biología",
+    "t": "Mutaciones",
+    "q": "¿Qué es una mutación?",
+    "o": [
+      "Un cambio en la secuencia del material genético.",
+      "Una adaptación que siempre beneficia al organismo.",
+      "La reproducción de una célula sin ADN.",
+      "Un cambio que siempre causa enfermedad."
+    ],
+    "a": 0,
+    "e": "Una mutación es un cambio en el material genético; sus efectos pueden ser neutros, perjudiciales o, en ciertos ambientes, beneficiosos.",
+    "c": "En un proyecto sobre variación biológica, estudiantes comparan secuencias de ADN de organismos y encuentran un cambio en la secuencia de nucleótidos. La docente explica que algunos cambios no tienen efecto apreciable, otros pueden ser perjudiciales y otros pueden resultar ventajosos según el ambiente."
+  },
+  {
+    "s": "Biología",
+    "t": "Genética mendeliana",
+    "q": "En una planta, A es dominante sobre a. ¿Qué proporción fenotípica se espera al cruzar Aa × Aa con dominancia completa?",
+    "o": [
+      "100 % recesivo.",
+      "3 dominantes : 1 recesivo.",
+      "1 dominante : 1 recesivo.",
+      "100 % heterocigotos."
+    ],
+    "a": 1,
+    "e": "El cruce produce genotipos 1 AA : 2 Aa : 1 aa y fenotipos 3 dominantes : 1 recesivo.",
+    "c": "En un invernadero escolar se estudia una característica de una planta donde A domina sobre a. Se cruzan dos plantas heterocigotas Aa × Aa y se supone dominancia completa y segregación mendeliana. El grupo predice la proporción de fenotipos esperada entre la descendencia."
+  },
+  {
+    "s": "Biología",
+    "t": "Cuadros de Punnett",
+    "q": "Una madre tiene genotipo XᴺXⁿ y el padre XᴺY. Si el rasgo recesivo está ligado al cromosoma X, ¿qué probabilidad tiene cada hijo varón de heredar el alelo Xⁿ?",
+    "o": [
+      "0 %",
+      "25 %",
+      "50 %",
+      "100 %"
+    ],
+    "a": 2,
+    "e": "Los hijos varones reciben el cromosoma Y del padre y uno de los X maternos; la mitad de los X maternos lleva Xⁿ.",
+    "c": "En una actividad de genética humana se analiza un rasgo recesivo ligado al cromosoma X, usando símbolos para representar alelos sin diagnosticar a personas reales. La madre tiene genotipo XᴺXⁿ y el padre XᴺY; el problema pregunta por la probabilidad genética para cada hijo varón."
+  },
+  {
+    "s": "Biología",
+    "t": "Evidencias evolutivas",
+    "q": "La similitud en la estructura ósea de la extremidad anterior de humanos, ballenas y murciélagos es evidencia de:",
+    "o": [
+      "Órganos homólogos y posible ancestro común.",
+      "Que todas las especies tienen el mismo hábitat.",
+      "Generación espontánea.",
+      "Ausencia de evolución."
+    ],
+    "a": 0,
+    "e": "Las estructuras homólogas comparten un plan anatómico heredado de un ancestro común, aunque tengan funciones distintas.",
+    "c": "En un museo de ciencias naturales, estudiantes comparan dibujos de las extremidades anteriores de humanos, ballenas y murciélagos. Aunque se utilizan para funciones distintas, los huesos mantienen un patrón estructural semejante que puede aportar evidencia sobre la historia evolutiva de esos grupos."
+  },
+  {
+    "s": "Biología",
+    "t": "Mecanismos evolutivos",
+    "q": "En una población de insectos, algunos individuos resistentes a un pesticida sobreviven y dejan más descendencia. ¿Qué proceso explica el aumento de resistencia?",
+    "o": [
+      "Selección natural.",
+      "Uso y desuso dirigido.",
+      "La necesidad transforma directamente los genes.",
+      "Equilibrio sin reproducción diferencial."
+    ],
+    "a": 0,
+    "e": "La selección natural favorece variantes heredables que aumentan la supervivencia y reproducción en un ambiente determinado.",
+    "c": "En una finca de Costa Rica se aplica un pesticida y sobreviven algunos insectos que ya tenían variantes heredables de resistencia. Estos individuos dejan más descendencia que los susceptibles. A través de varias generaciones, el grupo explica por qué puede aumentar la frecuencia de resistencia en la población."
+  },
+  {
+    "s": "Biología",
+    "t": "Teorías evolutivas",
+    "q": "¿Cuál es la idea central de la selección natural propuesta por Darwin y Wallace?",
+    "o": [
+      "Los organismos cambian porque desean adaptarse.",
+      "Variaciones heredables que favorecen la reproducción tienden a volverse más comunes a través de generaciones.",
+      "Los caracteres adquiridos durante la vida siempre se heredan.",
+      "Las especies permanecen invariables."
+    ],
+    "a": 1,
+    "e": "La selección natural actúa sobre variaciones heredables asociadas con diferencias en supervivencia y reproducción.",
+    "c": "Durante una unidad sobre evolución, estudiantes analizan poblaciones que presentan variaciones heredables y viven bajo condiciones ambientales específicas. Los individuos no cambian porque lo deseen; ciertas variantes pueden favorecer la supervivencia y reproducción, haciendo que se vuelvan más frecuentes a lo largo de generaciones."
+  },
+  {
+    "s": "Biología",
+    "t": "Restauración ecológica",
+    "q": "Un terreno queda sin suelo tras una erupción volcánica y comienza a ser colonizado por líquenes. ¿Qué proceso inicia?",
+    "o": [
+      "Sucesión primaria.",
+      "Sucesión secundaria con suelo intacto.",
+      "Eutrofización.",
+      "Biomagnificación."
+    ],
+    "a": 0,
+    "e": "La sucesión primaria comienza en superficies donde falta un suelo desarrollado; especies pioneras contribuyen a su formación.",
+    "c": "Después de una erupción volcánica, una superficie de roca desnuda en Costa Rica comienza a ser colonizada por líquenes y otros organismos pioneros. Como al inicio no existe un suelo desarrollado, el grupo investiga cómo se inicia la recuperación gradual de la comunidad biológica."
+  },
+  {
+    "s": "Biología",
+    "t": "Desarrollo sostenible",
+    "q": "¿Cuál decisión representa mejor el desarrollo sostenible en una comunidad?",
+    "o": [
+      "Usar recursos sin límite para maximizar beneficios inmediatos.",
+      "Equilibrar necesidades económicas y sociales con la protección ambiental para las generaciones presentes y futuras.",
+      "Prohibir toda actividad humana sin analizar alternativas.",
+      "Trasladar todos los residuos a otra comunidad."
+    ],
+    "a": 1,
+    "e": "El desarrollo sostenible busca integrar bienestar social, actividad económica y protección ambiental a largo plazo.",
+    "c": "Una comunidad costarricense debe decidir cómo manejar el agua, los residuos, el empleo y la conservación de un bosque cercano. Las personas buscan satisfacer las necesidades actuales sin agotar los recursos ni reducir las oportunidades de las generaciones futuras, equilibrando factores ambientales, sociales y económicos."
+  }
+];
+
+let index=0;
+let answers=Array(bank.length).fill(null);
+let flagged=Array(bank.length).fill(false);
+let remaining=4*60*60;
+let finished=false;
+let interval=null;
+const $=id=>document.getElementById(id);
+
+function graphSVG(){
+ return `<svg viewBox="0 0 620 300" role="img" aria-label="Gráfica posición-tiempo">
+ <rect width="620" height="300" rx="8" fill="#fff"/>
+ <g stroke="#e1e7ef" stroke-width="1">
+ ${Array.from({length:11},(_,i)=>`<line x1="${70+i*48}" y1="30" x2="${70+i*48}" y2="250"/>`).join("")}
+ ${Array.from({length:6},(_,i)=>`<line x1="70" y1="${250-i*40}" x2="550" y2="${250-i*40}"/>`).join("")}
+ </g>
+ <g stroke="#25364f" stroke-width="2"><line x1="70" y1="250" x2="570" y2="250"/><line x1="70" y1="260" x2="70" y2="20"/></g>
+ <g fill="#26364e" font-size="12">
+ <text x="300" y="288">Tiempo (s)</text><text x="12" y="18">Posición (m)</text>
+ ${[0,2,4,6,8,10].map((v,i)=>`<text x="${66+i*96}" y="270">${v}</text>`).join("")}
+ ${[0,10,20,30,40,50].map((v,i)=>`<text x="43" y="${254-i*40}">${v}</text>`).join("")}
+ </g>
+ <polyline points="70,250 166,170 262,90 358,90 454,170 550,210" fill="none" stroke="#2468c5" stroke-width="4" stroke-linejoin="round"/>
+ <g fill="#2468c5">${[[70,250],[166,170],[262,90],[358,90],[454,170],[550,210]].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="5"/>`).join("")}</g>
+ <text x="380" y="65" fill="#52637c" font-size="12">Tramo horizontal</text></svg>`;
+}
+
+
+function formulaFor(q){
+ const z=(q.t+' '+q.q+' '+q.e).toLowerCase();
+ const items=[
+  [/desplazamiento|vector|escalares|vectoriales/,['d = √(Δx² + Δy²)','Vector: magnitud + dirección','Ejemplo visual: 3 m al norte y 4 m al este → d = 5 m']],
+  [/movimiento|aceleración|rapidez|velocidad|gráficas del movimiento|ciclista|camin/,['v̄ = distancia / tiempo','a = (v_f − v_i) / Δt','En una gráfica v–t, el área con signo representa desplazamiento']],
+  [/newton|fuerza|gravitación|peso|energía|trabajo|potencia|órbita|satélite/,['ΣF = m·a','Peso: P = m·g; energía potencial: E_p = m·g·h','Trabajo: W = F·d·cos θ; potencia: Pot = W/Δt','Dato si aplica: g = 10 m/s² (aproximación escolar)']],
+  [/electric|ohm|circuit|corriente|voltaje|resistencia/,['Ley de Ohm: I = V/R','Potencia eléctrica: P = V·I','Unidades: V (voltio), I (amperio), R (ohmio), P (vatio)']],
+  [/onda|sonido|luz|frecuencia|longitud de onda|electromagnét|relatividad/,['Rapidez de onda: v = f·λ','Frecuencia: f = 1/T','La luz en el vacío viaja aproximadamente a c = 3,0 × 10⁸ m/s']],
+  [/densidad|presión|flot|fluido|calor|temperatura|térmic/,['Densidad: ρ = m/V','Calor sensible: Q = m·c·ΔT (si se proporcionan m, c y ΔT)','Temperatura y calor no son la misma magnitud']],
+  [/átomo|ion|protón|neutrón|electrón|tabla periódica|elemento químico|isótop/,['Número másico: A = Z + N','Neutrones: N = A − Z','Átomo neutro: electrones = protones = Z']],
+  [/mol|estequiometr|reacción química|balance|masa molar|concentración|disolución|porcent|soluto|solvente|ácido|base|ph|nomenclatura/,['Cantidad de sustancia: n = m/M','% m/m = (masa de soluto / masa de disolución) × 100','En una ecuación balanceada, los coeficientes indican proporciones molares']],
+  [/célula|organel|mitocond|fotosíntesis|cloroplast|tejido|organismo|adaptación|biodiversidad|ecosistema|cadena|red trófica|hábitat|población|especie|bosque|manglar|humedal|coral|evolución|gen|adn|herencia/,['Biología: identifique estructura → función → relación con el ambiente','Fotosíntesis (modelo): CO₂ + H₂O + luz → glucosa + O₂','Flujo de energía: productores → consumidores → descomponedores']],
+  [/clima|invernadero|radiación|energía solar|contaminación|cambio climático/,['Balance energético simplificado: energía entrante ≈ energía reflejada + energía absorbida','Compare variables, unidades, tendencias y posibles fuentes de error']],
+  [/mezcla|filtración|separ|solución|material|propiedad/,['Una mezcla conserva los componentes; los métodos físicos aprovechan propiedades como tamaño de partícula, solubilidad o punto de ebullición']],
+ ];
+ for(const [re,arr] of items) if(re.test(z)) return arr;
+ return ['Método científico: observación → pregunta → hipótesis → prueba → análisis','Registre variable independiente, variable dependiente y condiciones constantes'];
+}
+function visualFor(q){
+ const z=(q.t+' '+q.q+' '+q.e+' '+q.c).toLowerCase();
+ const frame=(title,svg,caption)=>`<section class="visualbox"><b>${title}</b>${svg}<p class="visualcaption">${caption}</p></section>`;
+ const axes=`<g stroke="#dce5f0" stroke-width="1"><path d="M48 20V150H320" fill="none"/>${[1,2,3,4].map(i=>`<path d="M48 ${150-i*28}H320"/>`).join('')}</g>`;
+ if(/desplazamiento|vector|norte|este/.test(z)) return frame('Esquema de desplazamiento',`<svg viewBox="0 0 350 190" role="img" aria-label="Vectores perpendiculares"><defs><marker id="arrv" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#2468c5"/></marker></defs><path d="M48 145 L48 45 L48 45" stroke="#2468c5" stroke-width="4" fill="none" marker-end="url(#arrv)"/><path d="M48 145 L245 145" stroke="#16846b" stroke-width="4" fill="none" marker-end="url(#arrv)"/><path d="M48 45 L245 145" stroke="#d97706" stroke-width="4" stroke-dasharray="6 4"/><g font-size="12" fill="#26364e"><text x="58" y="70">3 m norte</text><text x="110" y="165">4 m este</text><text x="132" y="83">resultante = 5 m</text></g></svg>`,'La distancia suma el camino; el desplazamiento une directamente la posición inicial con la final.');
+ if(/gráfica|movimiento|aceleración|rapidez|velocidad|ciclista|camina|circuito cerrado/.test(z)) return frame('Representación del movimiento',`<svg viewBox="0 0 350 190" role="img" aria-label="Gráfica esquemática velocidad-tiempo">${axes}<path d="M48 150 L48 66 L320 66" stroke="#2468c5" stroke-width="4" fill="none"/><path d="M48 150 L320 150" stroke="#26364e" stroke-width="2"/><g fill="#26364e" font-size="11"><text x="8" y="18">Velocidad</text><text x="235" y="178">Tiempo (s)</text><text x="58" y="55">velocidad constante</text><text x="45" y="166">0</text><text x="310" y="166">t</text></g><path d="M48 150 L320 66 L320 150Z" fill="#9fc5f8" opacity=".5"/></svg>`,'En una gráfica velocidad-tiempo, la pendiente representa aceleración y el área bajo la curva representa desplazamiento. Si el problema no da valores para graficar, úselo como esquema conceptual.');
+ if(/electric|ohm|circuit|corriente|voltaje|resistencia/.test(z)) return frame('Diagrama de circuito eléctrico',`<svg viewBox="0 0 350 170" role="img" aria-label="Circuito simple con batería y resistencia"><path d="M65 45 H130 M180 45 H285 V125 H65 V45" fill="none" stroke="#26364e" stroke-width="3"/><rect x="130" y="32" width="50" height="26" rx="3" fill="#f9d58b" stroke="#a66b00" stroke-width="2"/><path d="M45 75 V105 M35 82 H55 M38 98 H52" stroke="#2468c5" stroke-width="3"/><path d="M65 45 V75 M65 105 V125" stroke="#26364e" stroke-width="3"/><g fill="#26364e" font-size="12"><text x="118" y="22">Resistencia R</text><text x="16" y="124">Batería</text><text x="205" y="37">I</text><text x="90" y="150">I = V/R</text></g><path d="M215 45 l10 -5 v10z" fill="#16846b"/></svg>`,'Siga el recorrido cerrado. La corriente se mide en amperios; la resistencia en ohmios y la diferencia de potencial en voltios.');
+ if(/onda|sonido|frecuencia|longitud de onda|luz/.test(z)) return frame('Modelo de onda',`<svg viewBox="0 0 350 155" role="img" aria-label="Onda transversal con longitud de onda"><path d="M15 78 H335" stroke="#64748b" stroke-width="1.5"/><path d="M15 78 C35 15 55 15 75 78 S115 141 135 78 S175 15 195 78 S235 141 255 78 S295 15 315 78" fill="none" stroke="#2468c5" stroke-width="3"/><path d="M35 28 H155 M35 22 V34 M155 22 V34" stroke="#d97706" stroke-width="2"/><g fill="#26364e" font-size="12"><text x="70" y="18">λ</text><text x="205" y="145">v = fλ</text></g></svg>`,'La longitud de onda λ es la distancia entre puntos equivalentes consecutivos; la frecuencia f indica ciclos por segundo.');
+ if(/átomo|ion|protón|neutrón|electrón|isótop|tabla periódica/.test(z)) return frame('Modelo simplificado del átomo',`<svg viewBox="0 0 350 175" role="img" aria-label="Modelo de átomo"><ellipse cx="155" cy="83" rx="95" ry="38" fill="none" stroke="#2468c5" stroke-width="2" transform="rotate(-28 155 83)"/><ellipse cx="155" cy="83" rx="95" ry="38" fill="none" stroke="#16846b" stroke-width="2" transform="rotate(42 155 83)"/><circle cx="155" cy="83" r="22" fill="#f7c873" stroke="#a66b00" stroke-width="2"/><circle cx="147" cy="78" r="5" fill="#c0392b"/><circle cx="163" cy="88" r="5" fill="#64748b"/><circle cx="242" cy="48" r="6" fill="#2468c5"/><g fill="#26364e" font-size="12"><text x="190" y="115">electrón</text><text x="178" y="74">núcleo</text><text x="20" y="155">Z = protones; A = protones + neutrones</text></g></svg>`,'Esquema ilustrativo, no está a escala. En un átomo neutro, protones y electrones tienen igual cantidad; los neutrones se obtienen con A − Z.');
+ if(/mezcla|filtración|separ|arena|agua|solución/.test(z)) return frame('Esquema de separación de mezclas',`<svg viewBox="0 0 350 180" role="img" aria-label="Filtración de una mezcla de arena y agua"><path d="M80 28 H155 L143 55 L132 78 L118 95 L105 78 L93 55Z" fill="#b8d9f6" stroke="#2468c5" stroke-width="2"/><path d="M94 56 L141 56 L132 78 L118 95 L105 78Z" fill="#f2d6a0" stroke="#a66b00" stroke-width="1.5"/><path d="M108 95 L128 95 L160 145 H76Z" fill="#e8f2ff" stroke="#2468c5" stroke-width="2"/><path d="M118 98 V122" stroke="#2468c5" stroke-width="2"/><g fill="#26364e" font-size="12"><text x="170" y="42">Mezcla</text><text x="170" y="58">arena + agua</text><text x="170" y="115">Filtro retiene</text><text x="170" y="131">la arena</text><text x="170" y="151">El agua pasa</text></g></svg>`,'La filtración separa un sólido insoluble de un líquido; no elimina sustancias que están disueltas en el agua.');
+ if(/célula|organel|mitocond|fotosíntesis|cloroplast|adn|gen|herencia/.test(z)) return frame('Esquema de célula e información biológica',`<svg viewBox="0 0 350 175" role="img" aria-label="Célula esquemática"><ellipse cx="145" cy="85" rx="112" ry="65" fill="#d8f1e8" stroke="#16846b" stroke-width="3"/><circle cx="130" cy="78" r="26" fill="#c6d4f4" stroke="#4f6db8" stroke-width="2"/><circle cx="138" cy="72" r="8" fill="#4f6db8"/><ellipse cx="190" cy="58" rx="18" ry="9" fill="#f4c879" stroke="#a66b00" stroke-width="2"/><ellipse cx="85" cy="105" rx="17" ry="8" fill="#f4c879" stroke="#a66b00" stroke-width="2"/><g fill="#26364e" font-size="12"><text x="235" y="52">Membrana</text><text x="235" y="68">regula intercambio</text><text x="235" y="94">Núcleo</text><text x="235" y="110">contiene ADN</text><text x="25" y="165">Dibujo esquemático (no a escala)</text></g></svg>`,'Relacionar cada estructura con su función ayuda a interpretar la organización celular; los detalles varían entre células animales y vegetales.');
+ if(/ecosistema|cadena|red trófica|hábitat|biodiversidad|bosque|manglar|humedal|coral|productor|consumidor|depredador/.test(z)) return frame('Relación alimentaria en un ecosistema costarricense',`<svg viewBox="0 0 350 170" role="img" aria-label="Cadena alimentaria de ecosistema"><defs><marker id="arrec" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#16846b"/></marker></defs><g font-size="12" text-anchor="middle"><rect x="8" y="54" width="76" height="48" rx="8" fill="#d7f0d8" stroke="#16846b"/><text x="46" y="74">Plantas</text><text x="46" y="89">productor</text><rect x="101" y="54" width="76" height="48" rx="8" fill="#f8e5b5" stroke="#b7791f"/><text x="139" y="74">Insecto</text><text x="139" y="89">consumidor</text><rect x="194" y="54" width="76" height="48" rx="8" fill="#f5d5d5" stroke="#c0392b"/><text x="232" y="74">Ave</text><text x="232" y="89">consumidor</text><path d="M84 78 H98 M177 78 H191" stroke="#16846b" stroke-width="3" marker-end="url(#arrec)"/><text x="175" y="132" fill="#26364e">La energía fluye entre niveles</text><text x="175" y="149" fill="#52637c">La materia se recicla</text></g></svg>`,'Ejemplo general: en una cadena alimentaria, las flechas muestran el sentido de transferencia de materia y energía, no quién es “más fuerte”.');
+ if(/clima|invernadero|radiación|energía solar|calentamiento global/.test(z)) return frame('Modelo del balance de energía terrestre',`<svg viewBox="0 0 350 170" role="img" aria-label="Radiación solar y terrestre"><circle cx="40" cy="45" r="18" fill="#f5c542"/><g stroke="#d97706" stroke-width="2"><path d="M62 45 H110 M82 27 L99 12 M82 63 L99 78"/></g><path d="M110 45 L145 75" stroke="#d97706" stroke-width="4"/><path d="M110 55 L145 85" stroke="#d97706" stroke-width="4"/><path d="M80 112 Q170 82 260 112" stroke="#16846b" stroke-width="7" fill="none"/><path d="M175 105 L175 55" stroke="#c0392b" stroke-width="3" stroke-dasharray="5 4"/><path d="M165 60 L175 48 L185 60" fill="none" stroke="#c0392b" stroke-width="3"/><g fill="#26364e" font-size="12"><text x="15" y="90">Sol</text><text x="128" y="135">Superficie terrestre</text><text x="198" y="44">Radiación</text><text x="198" y="59">infrarroja</text></g></svg>`,'El efecto invernadero natural ayuda a mantener la temperatura del planeta; su intensificación contribuye al calentamiento global.');
+ return frame('Apoyo visual para analizar evidencia',`<svg viewBox="0 0 350 150" role="img" aria-label="Pasos del método científico"><g font-size="11" text-anchor="middle"><rect x="8" y="40" width="75" height="48" rx="7" fill="#eaf2ff" stroke="#2468c5"/><text x="45" y="60">Observar</text><text x="45" y="74">fenómeno</text><rect x="95" y="40" width="75" height="48" rx="7" fill="#eaf7ef" stroke="#16846b"/><text x="132" y="60">Proponer</text><text x="132" y="74">hipótesis</text><rect x="182" y="40" width="75" height="48" rx="7" fill="#fff3d9" stroke="#b7791f"/><text x="219" y="60">Medir y</text><text x="219" y="74">probar</text><rect x="269" y="40" width="73" height="48" rx="7" fill="#f8e8f0" stroke="#a34c7d"/><text x="305" y="60">Analizar</text><text x="305" y="74">datos</text><path d="M83 64 H92 M170 64 H179 M257 64 H266" stroke="#52637c" stroke-width="2"/></g></svg>`,'Use el esquema para identificar observaciones, hipótesis, variables, mediciones y conclusiones sustentadas en evidencia.');
+}
+function comparisonFor(q){
+ const z=(q.t+' '+q.q+' '+q.e+' '+q.c).toLowerCase();
+ let title='Comparación para interpretar la evidencia', rows=[];
+ if(/física/i.test(q.s) || /movimiento|velocidad|aceleración|fuerza|energía|trabajo|potencia|vector|onda|electric|calor|temperatura|densidad|presión|gravitación|satélite|circuito/.test(z)){
+   if(/movimiento|velocidad|aceleración|rapidez|gráfica|ciclista|camina/.test(z)){
+    title='Rapidez, velocidad y aceleración'; rows=[['Concepto','Qué describe','Unidad SI'],['Rapidez','Distancia recorrida por tiempo; no incluye dirección','m/s'],['Velocidad','Desplazamiento por tiempo; incluye dirección','m/s'],['Aceleración','Cambio de velocidad por tiempo','m/s²']];
+   } else if(/electric|ohm|circuit|corriente|voltaje|resistencia/.test(z)){
+    title='Magnitudes eléctricas'; rows=[['Magnitud','Símbolo habitual','Unidad'],['Corriente','I','amperio (A)'],['Diferencia de potencial','V','voltio (V)'],['Resistencia','R','ohmio (Ω)'],['Potencia','P','vatio (W)']];
+   } else if(/onda|sonido|frecuencia|longitud de onda|luz/.test(z)){
+    title='Magnitudes de una onda'; rows=[['Magnitud','Significado','Unidad'],['Frecuencia (f)','Ciclos por segundo','hertz (Hz)'],['Período (T)','Tiempo de un ciclo','segundo (s)'],['Longitud de onda (λ)','Distancia entre puntos equivalentes','metro (m)'],['Rapidez (v)','Propagación de la onda','m/s']];
+   } else if(/calor|temperatura|térmic/.test(z)){
+    title='Calor y temperatura'; rows=[['Concepto','Descripción','Unidad habitual'],['Calor','Energía transferida por diferencia de temperatura','joule (J)'],['Temperatura','Indicador del estado térmico de un sistema','kelvin (K) o °C'],['Equilibrio térmico','Dos sistemas alcanzan la misma temperatura','—']];
+   } else if(/densidad|presión|flot|fluido/.test(z)){
+    title='Propiedades de los fluidos'; rows=[['Propiedad','Relación útil','Unidad SI'],['Densidad','ρ = m/V','kg/m³'],['Presión','p = F/A','pascal (Pa)'],['Empuje','Fuerza hacia arriba ejercida por el fluido','newton (N)']];
+   } else {
+    title='Magnitudes mecánicas'; rows=[['Magnitud','Relación o significado','Unidad SI'],['Fuerza neta','ΣF = m·a','newton (N)'],['Trabajo','W = F·d·cos θ','joule (J)'],['Potencia','P = W/Δt','vatio (W)'],['Energía potencial gravitatoria','Ep = m·g·h','joule (J)']];
+   }
+ } else if(/química/i.test(q.s) || /átomo|ion|protón|neutrón|electrón|tabla periódica|isótop|mol|estequiometr|reacción química|balance|masa molar|concentración|disolución|soluto|solvente|ácido|base|ph|mezcla|filtración|separación|nomenclatura/.test(z)){
+   if(/átomo|ion|protón|neutrón|electrón|isótop|tabla periódica/.test(z)){
+    title='Partículas subatómicas'; rows=[['Partícula','Carga relativa','Ubicación'],['Protón','+1','Núcleo'],['Neutrón','0','Núcleo'],['Electrón','−1','Nube electrónica']];
+   } else if(/mezcla|filtración|separ|solución|soluto|solvente/.test(z)){
+    title='Sustancias y mezclas'; rows=[['Sistema','Características','Ejemplo'],['Sustancia pura','Composición definida','Agua destilada'],['Mezcla homogénea','Una fase visible; composición uniforme','Sal disuelta en agua'],['Mezcla heterogénea','Dos o más fases distinguibles','Arena y agua'],['Filtración','Retiene sólido insoluble','Separar arena del agua']];
+   } else if(/ácido|base|ph/.test(z)){
+    title='Escala de pH'; rows=[['Valor de pH (aprox.)','Clasificación','Ejemplo general'],['Menor que 7','Ácido','Jugo de limón'],['Igual a 7','Neutro a 25 °C','Agua pura ideal'],['Mayor que 7','Básico o alcalino','Solución de bicarbonato diluida']];
+   } else {
+    title='Relaciones en cálculos químicos'; rows=[['Concepto','Relación','Qué representa'],['Cantidad de sustancia','n = m/M','Moles a partir de masa y masa molar'],['Concentración molar','C = n/V','Moles de soluto por litro de disolución'],['Porcentaje masa/masa','% = (m soluto / m disolución) × 100','Proporción de masa'],['Ecuación balanceada','Átomos conservados','Misma cantidad de cada elemento a ambos lados']];
+   }
+ } else {
+   if(/célula|organel|mitocond|fotosíntesis|cloroplast|adn|gen|herencia|tejido/.test(z)){
+    title='Estructuras celulares y función'; rows=[['Estructura','Función principal','Presencia general'],['Membrana plasmática','Regula intercambio con el entorno','Células animales y vegetales'],['Núcleo','Contiene la mayor parte del ADN en células eucariotas','Células eucariotas'],['Mitocondria','Participa en la respiración celular','Células eucariotas'],['Cloroplasto','Fotosíntesis','Células vegetales y algas']];
+   } else if(/ecosistema|cadena|red trófica|hábitat|biodiversidad|bosque|manglar|humedal|coral|productor|consumidor|depredador/.test(z)){
+    title='Niveles tróficos'; rows=[['Nivel','Papel','Ejemplo general'],['Productor','Forma materia orgánica usando energía','Plantas y algas'],['Consumidor primario','Se alimenta de productores','Herbívoro'],['Consumidor secundario','Se alimenta de otros consumidores','Carnívoro u omnívoro'],['Descomponedor','Recicla nutrientes de materia orgánica','Hongos y bacterias']];
+   } else if(/clima|invernadero|radiación|energía solar|calentamiento global|contaminación/.test(z)){
+    title='Factores ambientales y efecto'; rows=[['Factor','Posible efecto','Ejemplo de acción'],['Emisiones de gases de efecto invernadero','Retienen más radiación infrarroja','Reducir uso de combustibles fósiles'],['Deforestación','Reduce hábitats y captura de carbono','Conservar y restaurar bosques'],['Contaminación del agua','Afecta organismos y uso humano','Tratar aguas residuales']];
+   } else {
+    title='Evidencia científica y análisis'; rows=[['Elemento','Pregunta guía','Ejemplo'],['Variable independiente','¿Qué se modifica?','Cantidad de luz'],['Variable dependiente','¿Qué se mide?','Crecimiento de una planta'],['Variables controladas','¿Qué debe mantenerse constante?','Agua, suelo y especie'],['Conclusión','¿Qué permiten afirmar los datos?','Solo lo respaldado por mediciones']];
+   }
+ }
+ return `<section class="comparison-panel"><h3>${title}</h3><div class="table-wrap"><table><thead><tr>${rows[0].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${rows.slice(1).map(row=>`<tr>${row.map(cell=>`<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+}
+function visualPanel(q){
+ const z=(q.t+' '+q.q+' '+q.e).toLowerCase();
+ // Mostrar solo un apoyo breve y directamente relacionado con el ítem.
+ const wantsCompare=/compar|diferencia|contrasta|clasifica|relaciona/.test(z);
+ const wantsFormula=/calcula|determine|determin|cuánto|cuanto|velocidad|rapidez|aceleración|fuerza|energía|trabajo|potencia|densidad|presión|carga|corriente|resistencia|voltaje|frecuencia|mol|concentración|masa molar|porcentaje|ph|número másico|neutrones/.test(z);
+ const hasDiagram=/átomo|ion|protón|neutrón|electrón|isótop|célula|organel|mitocond|fotosíntesis|cloroplast|cadena trófica|red trófica|ecosistema|onda|circuito|vector|desplazamiento|efecto invernadero/.test(z);
+ if(wantsCompare){
+   const table=comparisonFor(q);
+   return table.replace(/<tbody>([\s\S]*?)<\/tbody>/, (m,body)=>`<tbody>${body.split('</tr>').slice(0,3).join('</tr>')}</tbody>`);
+ }
+ if(wantsFormula){
+   const formulas=formulaFor(q).slice(0,1);
+   return `<section class="formula-panel"><h3>Dato clave</h3><div class="formula">${formulas[0]}</div></section>`;
+ }
+ if(hasDiagram){
+   const visual=visualFor(q);
+   return visual.replace(/<p class="visualcaption">([\s\S]*?)<\/p>/, '<p class="visualcaption">$1</p>');
+ }
+ return '';
+}
+
+function render(){
+ if(finished)return;
+ const q=bank[index];
+ $("subject").textContent=q.s;
+ $("counter").textContent=`Pregunta ${index+1} de ${bank.length}`;
+ $("progressbar").style.width=`${answers.filter(x=>x!==null).length/bank.length*100}%`;
+ $("answered").textContent=`Respondidas: ${answers.filter(x=>x!==null).length} de ${bank.length}`;
+
+ let html=`<span class="pill">${q.t}</span><div class="context"><b>Contexto</b><p>${q.c}</p></div>${visualPanel(q)}<h2>${q.q}</h2>`;
+
+ html+=`<div class="options">${q.o.map((op,j)=>`
+ <label class="option ${answers[index]===j?'selected':''}">
+ <input type="radio" name="answer" value="${j}" ${answers[index]===j?'checked':''}>
+ <span class="letter">${"ABCD"[j]}.</span><span>${op}</span>
+ </label>`).join("")}</div>`;
+
+ $("questionArea").innerHTML=html;
+ document.querySelectorAll('input[name="answer"]').forEach(el=>{
+  el.addEventListener("change",e=>{
+   answers[index]=Number(e.target.value);
+   updateStatus();renderNav();
+  });
+ });
+ $("prev").disabled=index===0;
+ $("next").disabled=index===bank.length-1;
+ $("flag").textContent=flagged[index]?"Marcada ★":"Marcar ☆";
+ renderNav();
+}
+
+function updateStatus(){
+ $("answered").textContent=`Respondidas: ${answers.filter(x=>x!==null).length} de ${bank.length}`;
+ $("progressbar").style.width=`${answers.filter(x=>x!==null).length/bank.length*100}%`;
+}
+function renderNav(){
+ $("navgrid").innerHTML=bank.map((q,i)=>`<button title="Pregunta ${i+1}" class="${answers[i]!==null?'done ':''}${i===index?'current':''}" onclick="go(${i})">${i+1}${flagged[i]?'★':''}</button>`).join("");
+}
+function go(i){if(i<0||i>=bank.length||finished)return;index=i;render()}
+function formatTime(s){
+ const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;
+ return [h,m,sec].map(n=>String(n).padStart(2,"0")).join(":");
+}
+function tick(){
+ if(finished)return;
+ remaining--;
+ $("timer").textContent=formatTime(Math.max(0,remaining));
+ if(remaining<=0)finishExam(true);
+}
+function finishExam(timeout=false){
+ if(finished)return;
+ const blank=answers.filter(x=>x===null).length;
+ if(!timeout&&!confirm(`¿Finalizar la prueba? Hay ${blank} preguntas sin responder.`))return;
+ finished=true;clearInterval(interval);
+ $("exam").style.display="none";
+ $("results").classList.add("show");
+ let correct=0;
+ bank.forEach((q,i)=>{if(answers[i]===q.a)correct++});
+ const wrong=answers.filter((x,i)=>x!==null&&x!==bank[i].a).length;
+ $("score").textContent=`${correct} / ${bank.length} (${(correct/bank.length*100).toFixed(1)} %)`;
+ $("summary").textContent=`Correctas: ${correct}. Incorrectas: ${wrong}. Sin responder: ${blank}.${timeout?" El tiempo terminó.":""}`;
+ $("review").innerHTML=bank.map((q,i)=>{
+  const ok=answers[i]===q.a;
+  return `<article class="feedback ${ok?'correct':'incorrect'}">
+  <b>${i+1}. ${q.s} — ${ok?"Correcta":"Revisar"}</b>
+  <p>${q.q}</p>
+  <p><b>Su respuesta:</b> ${answers[i]===null?"Sin responder":"ABCD"[answers[i]]+". "+q.o[answers[i]]}</p>
+  <p><b>Respuesta correcta:</b> ${"ABCD"[q.a]+". "+q.o[q.a]}</p>
+  <p><b>Explicación:</b> ${q.e}</p></article>`;
+ }).join("");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+$("prev").addEventListener("click",()=>go(index-1));
+$("next").addEventListener("click",()=>go(index+1));
+$("flag").addEventListener("click",()=>{flagged[index]=!flagged[index];renderNav();$("flag").textContent=flagged[index]?"Marcada ★":"Marcar ☆"});
+$("finish").addEventListener("click",()=>finishExam(false));
+
+render();
+$("timer").textContent=formatTime(remaining);
+interval=setInterval(tick,1000);
+</script>
+</body>
+</html>
